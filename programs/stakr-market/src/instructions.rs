@@ -95,7 +95,7 @@ pub fn buy_shares(ctx: Context<BuyShares>, nonce: i64, outcome: u8, shares: u64)
         authority: ctx.accounts.user.to_account_info(),
     };
     let cpi_ctx = CpiContext::new(
-        ctx.accounts.token_program.key(),
+        ctx.accounts.token_program.to_account_info(),
         cpi_accounts,
     );
     transfer_checked(cpi_ctx, cost, market.mint_decimals)?;
@@ -167,7 +167,7 @@ pub fn resolve_market(ctx: Context<ResolveMarket>, winning_outcome: u8) -> Resul
     Ok(())
 }
 
-pub fn disburse<'a>(ctx: Context<'a, Disburse<'a>>) -> Result<()> {
+pub fn disburse(ctx: Context<Disburse> -> Result<()> {
     let market = &ctx.accounts.market;
     require!(market.resolved, PredictionMarketError::MarketNotResolved);
 
@@ -312,7 +312,7 @@ pub fn disburse<'a>(ctx: Context<'a, Disburse<'a>>) -> Result<()> {
             authority: ctx.accounts.market.to_account_info(),
         };
         let cpi_ctx = CpiContext::new_with_signer(
-            ctx.accounts.token_program.key(),
+            ctx.accounts.token_program.to_account_info(),
             cpi_accounts,
             signer_seeds,
         );

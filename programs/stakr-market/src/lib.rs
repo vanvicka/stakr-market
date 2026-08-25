@@ -35,7 +35,7 @@ pub mod prediction_market {
         instructions::resolve_market(ctx, winning_outcome)
     }
 
-    pub fn disburse<'a>(ctx: Context<'a, Disburse<'a>>) -> Result<()> {
+    pub fn disburse(ctx: Context<Disburse>) -> Result<()> {
         instructions::disburse(ctx)
     }
 
