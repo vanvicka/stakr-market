@@ -1,0 +1,6 @@
+target/
+anchor-target/
+node_modules/
+.env
+*.local
+Cargo.lock

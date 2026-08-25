@@ -1,0 +1,35 @@
+name: Build Solana Program
+
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container:
+      image: backpackapp/build:v0.30.1
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Generate lockfile and downgrade format
+        run: |
+          rm -f Cargo.lock
+          cargo generate-lockfile
+          sed -i '0,/^version = 4$/s//version = 3/' Cargo.lock
+
+      - name: Build
+        run: anchor build
+
+      - name: Upload .so artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: stakr_market-so
+          path: target/deploy/stakr_market.so
+
+      - name: Upload IDL
+        uses: actions/upload-artifact@v4
+        with:
+          name: stakr_market-idl
+          path: target/idl/prediction_market.json
