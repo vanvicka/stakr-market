@@ -8,13 +8,13 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    container:
+      image: solanafoundation/anchor:v1.0.2
     steps:
       - uses: actions/checkout@v4
 
-      - name: Build with Anchor (verifiable)
-        uses: solanafoundation/anchor@v1.0.2
-        with:
-          args: build --verifiable
+      - name: Build (verifiable)
+        run: anchor build --verifiable
 
       - name: Upload .so artifact
         uses: actions/upload-artifact@v4
@@ -27,9 +27,3 @@ jobs:
         with:
           name: stakr_market-idl
           path: target/idl/prediction_market.json
-
-      - name: Upload deployed .so alias
-        uses: actions/upload-artifact@v4
-        with:
-          name: stakr_market-deploy
-          path: target/deploy/stakr_market.so
