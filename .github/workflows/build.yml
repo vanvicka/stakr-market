@@ -8,42 +8,36 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    container:
-      image: backpackapp/build:v0.30.1
     steps:
       - uses: actions/checkout@v4
 
-      - name: Generate lockfile and pin compat versions
-        run: |
-          rm -f Cargo.lock
-          cargo generate-lockfile
-          sed -i '0,/^version = 4$/s//version = 3/' Cargo.lock
-          # Pin transitive deps to pre-edition2024 versions
-          # (SBF toolchain cargo=1.75 can't compile edition2024 crates)
-          cargo update cpufeatures --precise 0.2.14 || true
-          cargo update toml_edit --precise 0.22.20 || true
-          cargo update zerocopy --precise 0.7.35 || true
-          cargo update home --precise 0.5.9 || true
-          cargo update url --precise 2.5.2 || true
-          cargo update icu_normalizer --precise 1.5.0 || true
-          cargo update icu_properties --precise 1.5.0 || true
-          cargo update litemap --precise 0.7.4 || true
-          cargo update writeable --precise 0.5.7 || true
-          cargo update zerofrom --precise 0.1.5 || true
-          cargo update potential_utf --precise 0.1.1 || true
-          cargo update zerotrie --precise 0.1.3 || true
-          cargo update idna_adapter --precise 1.2.0 || true
+      - name: Install Rust nightly for SBF
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: sbf-solana-solana
 
-      - name: Build SBF
+      - name: Install Solana CLI
         run: |
-          cd programs/stakr-market
-          cargo build-sbf
+          sh -c "$(curl -sSfL https://release.anza.xyz/stable/install)"
+          echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
 
-      - name: Copy artifacts
+      - name: Install Anchor
         run: |
-          mkdir -p target/deploy
-          cp target/sbpf-solana-solana/release/stakr_market.so target/deploy/stakr_market.so || true
-          ls -la target/sbpf-solana-solana/release/stakr_market.so target/deploy/stakr_market.so 2>/dev/null || true
+          cargo install --git https://github.com/coral-xyz/anchor anchor-cli --locked
+          echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+
+      - name: Verify tools
+        run: |
+          solana --version
+          anchor --version
+          cargo --version
+          rustc --version
+
+      - name: Remove stale lockfile
+        run: rm -f Cargo.lock
+
+      - name: Build
+        run: anchor build
 
       - name: Upload .so artifact
         uses: actions/upload-artifact@v4
