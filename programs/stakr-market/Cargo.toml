@@ -25,5 +25,14 @@ anchor-lang = { version = "0.30.1", features = ["init-if-needed"] }
 anchor-spl = "0.30.1"
 spl-token = { version = "6.0.0", features = ["no-entrypoint"] }
 
+# Pin transitive deps to pre-edition2024 versions.
+# SBF toolchain cargo=1.75 cannot compile edition2024 crates.
+# Adding as direct deps forces cargo to unify ALL uses across the tree.
+block-buffer = "=0.10.4"
+cpufeatures = "=0.2.14"
+toml_edit = "=0.22.20"
+toml_parser = "=0.19.0"
+indexmap = "=2.7.0"
+
 [lints.rust]
 unexpected_cfgs = { level = "warn", check-cfg = ['cfg(target_os, values("solana"))'] }
