@@ -16,11 +16,19 @@ jobs:
       - name: Generate lockfile and downgrade format
         run: |
           rm -f Cargo.lock
+          cd programs/stakr-market
           cargo generate-lockfile
-          sed -i '0,/^version = 4$/s//version = 3/' Cargo.lock
 
-      - name: Build
-        run: anchor build
+      - name: Build SBF
+        run: |
+          cd programs/stakr-market
+          cargo build-sbf
+
+      - name: Copy artifacts
+        run: |
+          mkdir -p target/deploy
+          cp target/sbpf-solana-solana/release/stakr_market.so target/deploy/stakr_market.so || true
+          ls -la target/sbpf-solana-solana/release/stakr_market.so target/deploy/stakr_market.so 2>/dev/null || true
 
       - name: Upload .so artifact
         uses: actions/upload-artifact@v4
