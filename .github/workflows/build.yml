@@ -11,21 +11,27 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install Rust stable
+      # Step 1: Generate lockfile with OLD cargo so only pre-edition2024
+      # crates are resolved into the dependency graph.
+      - name: Install Rust 1.75 for lockfile generation
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: 1.75.0
+
+      - name: Remove stale lockfile and regenerate
+        run: |
+          rm -f Cargo.lock programs/stakr-market/Cargo.lock
+          cd programs/stakr-market
+          cargo generate-lockfile
+
+      # Step 2: Install LATEST stable Rust + Solana SBF toolchain for build.
+      - name: Install latest Rust
         uses: dtolnay/rust-toolchain@stable
 
-      - name: Cache Rust dependencies
-        uses: Swatinem/rust-cache@v2
-
-      - name: Install Solana SBF tools
+      - name: Install Solana SBF tools (Agave v2.1)
         run: |
           sh -c "$(curl -sSfL https://release.anza.xyz/v2.1.0/install)"
           echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
-        env:
-          PATH: /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
-
-      - name: Install deps
-        run: sudo apt-get update && sudo apt-get install -y pkg-config libssl-dev libudev-dev protobuf-compiler
 
       - name: Verify tools
         run: |
@@ -33,24 +39,20 @@ jobs:
           solana --version
           cargo --version
           rustc --version
-          cargo build-sbf --version || true
 
       - name: Build SBF
         run: |
           cd programs/stakr-market
-          rm -f ../../Cargo.lock ../../programs/stakr-market/Cargo.lock
           export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
           cargo build-sbf
 
       - name: Copy artifacts
         run: |
           mkdir -p target/deploy
-          if [ -f programs/stakr-market/target/sbpf-solana-solana/release/stakr_market.so ]; then
-            cp programs/stakr-market/target/sbpf-solana-solana/release/stakr_market.so target/deploy/
-          elif [ -f target/sbpf-solana-solana/release/stakr_market.so ]; then
-            cp target/sbpf-solana-solana/release/stakr_market.so target/deploy/
-          fi
-          ls -la target/deploy/ || true
+          find . -name "*.so" -path "*/release/*" | head -5 || true
+          SO=$(find . -name "stakr_market.so" | head -1)
+          echo "Found .so at: $SO"
+          cp "$SO" target/deploy/stakr_market.so
 
       - name: Upload .so artifact
         uses: actions/upload-artifact@v4
