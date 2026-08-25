@@ -21,7 +21,7 @@ jobs:
 
       - name: Install Anchor
         run: |
-          cargo install --git https://github.com/coral-xyz/anchor anchor-cli --locked
+          cargo install anchor-cli --version 0.30.1 --locked
           echo "$HOME/.cargo/bin" >> $GITHUB_PATH
 
       - name: Verify tools
