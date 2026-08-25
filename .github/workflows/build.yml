@@ -11,52 +11,25 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # Step 1: Generate lockfile with OLD cargo so only pre-edition2024
-      # crates are resolved into the dependency graph.
-      - name: Install Rust 1.75 for lockfile generation
-        uses: dtolnay/rust-toolchain@master
+      - name: Build with Anchor (verifiable)
+        uses: solanafoundation/anchor@v1.0.2
         with:
-          toolchain: 1.75.0
-
-      - name: Remove stale lockfile AND rust-toolchain override
-        run: |
-          rm -f Cargo.lock programs/stakr-market/Cargo.lock
-          rm -f rust-toolchain.toml
-          cd programs/stakr-market
-          cargo +1.75.0 generate-lockfile
-
-      # Step 2: Install LATEST stable Rust + Solana SBF toolchain for build.
-      - name: Install latest Rust
-        uses: dtolnay/rust-toolchain@stable
-
-      - name: Install Solana SBF tools (Agave v2.1)
-        run: |
-          sh -c "$(curl -sSfL https://release.anza.xyz/v2.1.0/install)"
-          echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
-
-      - name: Verify tools
-        run: |
-          export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
-          solana --version
-          cargo --version
-          rustc --version
-
-      - name: Build SBF
-        run: |
-          cd programs/stakr-market
-          export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
-          cargo build-sbf
-
-      - name: Copy artifacts
-        run: |
-          mkdir -p target/deploy
-          find . -name "*.so" -path "*/release/*" | head -5 || true
-          SO=$(find . -name "stakr_market.so" | head -1)
-          echo "Found .so at: $SO"
-          cp "$SO" target/deploy/stakr_market.so
+          args: build --verifiable
 
       - name: Upload .so artifact
         uses: actions/upload-artifact@v4
         with:
           name: stakr_market-so
+          path: target/verifiable/stakr_market.so
+
+      - name: Upload IDL
+        uses: actions/upload-artifact@v4
+        with:
+          name: stakr_market-idl
+          path: target/idl/prediction_market.json
+
+      - name: Upload deployed .so alias
+        uses: actions/upload-artifact@v4
+        with:
+          name: stakr_market-deploy
           path: target/deploy/stakr_market.so
