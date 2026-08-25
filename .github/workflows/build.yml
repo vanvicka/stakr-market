@@ -13,11 +13,26 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Generate lockfile and downgrade format
+      - name: Generate lockfile and pin compat versions
         run: |
           rm -f Cargo.lock
           cargo generate-lockfile
           sed -i '0,/^version = 4$/s//version = 3/' Cargo.lock
+          # Pin transitive deps to pre-edition2024 versions
+          # (SBF toolchain cargo=1.75 can't compile edition2024 crates)
+          cargo update cpufeatures --precise 0.2.14 || true
+          cargo update toml_edit --precise 0.22.20 || true
+          cargo update zerocopy --precise 0.7.35 || true
+          cargo update home --precise 0.5.9 || true
+          cargo update url --precise 2.5.2 || true
+          cargo update icu_normalizer --precise 1.5.0 || true
+          cargo update icu_properties --precise 1.5.0 || true
+          cargo update litemap --precise 0.7.4 || true
+          cargo update writeable --precise 0.5.7 || true
+          cargo update zerofrom --precise 0.1.5 || true
+          cargo update potential_utf --precise 0.1.1 || true
+          cargo update zerotrie --precise 0.1.3 || true
+          cargo update idna_adapter --precise 1.2.0 || true
 
       - name: Build SBF
         run: |
