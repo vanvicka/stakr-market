@@ -13,14 +13,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Build (verifiable)
-        run: anchor build --verifiable
+      - name: Build
+        run: anchor build
 
       - name: Upload .so artifact
         uses: actions/upload-artifact@v4
         with:
           name: stakr_market-so
-          path: target/verifiable/stakr_market.so
+          path: target/deploy/stakr_market.so
 
       - name: Upload IDL
         uses: actions/upload-artifact@v4
