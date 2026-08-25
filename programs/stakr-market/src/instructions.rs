@@ -167,7 +167,7 @@ pub fn resolve_market(ctx: Context<ResolveMarket>, winning_outcome: u8) -> Resul
     Ok(())
 }
 
-pub fn disburse<'a>(ctx: Context<'a, Disburse<'a>>) -> Result<()> {
+pub fn disburse<'info>(ctx: Context<'_, '_, '_, 'info, Disburse<'info>>) -> Result<()> {
     let market = &ctx.accounts.market;
     require!(market.resolved, PredictionMarketError::MarketNotResolved);
 
