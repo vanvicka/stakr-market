@@ -411,7 +411,7 @@ pub fn withdraw_residual(ctx: Context<WithdrawResidual>) -> Result<()> {
         authority: ctx.accounts.market.to_account_info(),
     };
     let cpi_ctx = CpiContext::new_with_signer(
-        ctx.accounts.token_program.key(),
+        ctx.accounts.token_program.to_account_info(),
         cpi_accounts,
         signer_seeds,
     );
@@ -423,7 +423,7 @@ pub fn withdraw_residual(ctx: Context<WithdrawResidual>) -> Result<()> {
         authority: ctx.accounts.market.to_account_info(),
     };
     let close_ctx = CpiContext::new_with_signer(
-        ctx.accounts.token_program.key(),
+        ctx.accounts.token_program.to_account_info(),
         close_accounts,
         signer_seeds,
     );
