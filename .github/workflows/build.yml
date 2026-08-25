@@ -11,40 +11,49 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install Rust
+      - name: Install Rust stable
         uses: dtolnay/rust-toolchain@stable
 
-      - name: Install Solana CLI
-        run: |
-          sh -c "$(curl -sSfL https://release.anza.xyz/stable/install)"
-          echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
+      - name: Cache Rust dependencies
+        uses: Swatinem/rust-cache@v2
 
-      - name: Install Anchor
+      - name: Install Solana SBF tools
         run: |
-          cargo install anchor-cli --version 0.30.1 --locked
-          echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+          sh -c "$(curl -sSfL https://release.anza.xyz/v2.1.0/install)"
+          echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
+        env:
+          PATH: /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+
+      - name: Install deps
+        run: sudo apt-get update && sudo apt-get install -y pkg-config libssl-dev libudev-dev protobuf-compiler
 
       - name: Verify tools
         run: |
+          export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
           solana --version
-          anchor --version
           cargo --version
           rustc --version
+          cargo build-sbf --version || true
 
-      - name: Remove stale lockfile
-        run: rm -f Cargo.lock
+      - name: Build SBF
+        run: |
+          cd programs/stakr-market
+          rm -f ../../Cargo.lock ../../programs/stakr-market/Cargo.lock
+          export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
+          cargo build-sbf
 
-      - name: Build
-        run: anchor build
+      - name: Copy artifacts
+        run: |
+          mkdir -p target/deploy
+          if [ -f programs/stakr-market/target/sbpf-solana-solana/release/stakr_market.so ]; then
+            cp programs/stakr-market/target/sbpf-solana-solana/release/stakr_market.so target/deploy/
+          elif [ -f target/sbpf-solana-solana/release/stakr_market.so ]; then
+            cp target/sbpf-solana-solana/release/stakr_market.so target/deploy/
+          fi
+          ls -la target/deploy/ || true
 
       - name: Upload .so artifact
         uses: actions/upload-artifact@v4
         with:
           name: stakr_market-so
           path: target/deploy/stakr_market.so
-
-      - name: Upload IDL
-        uses: actions/upload-artifact@v4
-        with:
-          name: stakr_market-idl
-          path: target/idl/prediction_market.json
