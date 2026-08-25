@@ -16,8 +16,8 @@ jobs:
       - name: Generate lockfile and downgrade format
         run: |
           rm -f Cargo.lock
-          cd programs/stakr-market
           cargo generate-lockfile
+          sed -i '0,/^version = 4$/s//version = 3/' Cargo.lock
 
       - name: Build SBF
         run: |
