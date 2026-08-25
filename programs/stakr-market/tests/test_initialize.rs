@@ -1,4 +1,3 @@
-
 use {
     anchor_lang::{
         solana_program::{
@@ -51,11 +50,12 @@ fn test_resolve_market() {
         mint: program_id,
         mint_decimals: 0,
         market_bump: bump,
-        categories: vec![0],
+        category: "Lottery".to_string(),
+        avatar_url: String::new(),
     };
 
     let mut data = Market::DISCRIMINATOR.to_vec();
-    data.extend(borsh::to_vec(&market).unwrap());
+    data.extend(market.try_to_vec().unwrap());
     let lamports = svm.minimum_balance_for_rent_exemption(data.len());
     svm.set_account(
         market_pda,
