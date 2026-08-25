@@ -18,11 +18,12 @@ jobs:
         with:
           toolchain: 1.75.0
 
-      - name: Remove stale lockfile and regenerate
+      - name: Remove stale lockfile AND rust-toolchain override
         run: |
           rm -f Cargo.lock programs/stakr-market/Cargo.lock
+          rm -f rust-toolchain.toml
           cd programs/stakr-market
-          cargo generate-lockfile
+          cargo +1.75.0 generate-lockfile
 
       # Step 2: Install LATEST stable Rust + Solana SBF toolchain for build.
       - name: Install latest Rust
