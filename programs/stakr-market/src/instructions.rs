@@ -95,7 +95,7 @@ pub fn buy_shares(ctx: Context<BuyShares>, nonce: i64, outcome: u8, shares: u64)
         authority: ctx.accounts.user.to_account_info(),
     };
     let cpi_ctx = CpiContext::new(
-        ctx.accounts.token_program.to_account_info(),
+        ctx.accounts.token_program.key(),
         cpi_accounts,
     );
     transfer_checked(cpi_ctx, cost, market.mint_decimals)?;
@@ -167,7 +167,7 @@ pub fn resolve_market(ctx: Context<ResolveMarket>, winning_outcome: u8) -> Resul
     Ok(())
 }
 
-pub fn disburse<'info>(ctx: Context<'_, '_, '_, 'info, Disburse<'info>>) -> Result<()> {
+pub fn disburse<'info>(ctx: Context<'info, Disburse<'info>>) -> Result<()> {
     let market = &ctx.accounts.market;
     require!(market.resolved, PredictionMarketError::MarketNotResolved);
 
@@ -312,7 +312,7 @@ pub fn disburse<'info>(ctx: Context<'_, '_, '_, 'info, Disburse<'info>>) -> Resu
             authority: ctx.accounts.market.to_account_info(),
         };
         let cpi_ctx = CpiContext::new_with_signer(
-            ctx.accounts.token_program.to_account_info(),
+            ctx.accounts.token_program.key(),
             cpi_accounts,
             signer_seeds,
         );
@@ -411,7 +411,7 @@ pub fn withdraw_residual(ctx: Context<WithdrawResidual>) -> Result<()> {
         authority: ctx.accounts.market.to_account_info(),
     };
     let cpi_ctx = CpiContext::new_with_signer(
-        ctx.accounts.token_program.to_account_info(),
+        ctx.accounts.token_program.key(),
         cpi_accounts,
         signer_seeds,
     );
@@ -423,7 +423,7 @@ pub fn withdraw_residual(ctx: Context<WithdrawResidual>) -> Result<()> {
         authority: ctx.accounts.market.to_account_info(),
     };
     let close_ctx = CpiContext::new_with_signer(
-        ctx.accounts.token_program.to_account_info(),
+        ctx.accounts.token_program.key(),
         close_accounts,
         signer_seeds,
     );
